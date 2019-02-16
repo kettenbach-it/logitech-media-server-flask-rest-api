@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  lms-api:
+    build: .
+    image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.0
+    container_name: lms-api
+    networks:
+      default:
+        ipv4_address: 192.168.204.108
+    restart: always
+
+networks:
+  default:
+    external:
+      name: lan
+
