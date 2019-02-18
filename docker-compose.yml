@@ -2,7 +2,7 @@ version: "3.7"
 services:
   lms-api:
     build: .
-    image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.0
+    image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.1
     container_name: lms-api
     networks:
       default:

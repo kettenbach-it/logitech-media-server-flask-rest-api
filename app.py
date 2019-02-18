@@ -11,9 +11,6 @@ DEFAULT_PLAYER="00:04:20:23:a4:61"
 app = Flask(__name__)
 api = Api(app)
 
-sc = Server(hostname="sbs.rz.kettenbach-it.de", port=9090)
-sc.connect()
-
 
 def returnDefaultRecord(sq):
     print(request.endpoint + " for " + sq.get_name())
@@ -32,6 +29,8 @@ def returnDefaultRecord(sq):
 
 
 def ProcessCommand():
+    sc = Server(hostname="sbs.rz.kettenbach-it.de", port=9090)
+    sc.connect()
     parser = reqparse.RequestParser()
     parser.add_argument('player', type=str, help='Mac address of player')
     args = parser.parse_args()
@@ -92,6 +91,7 @@ def ProcessCommand():
 
     if request.endpoint == "voldown":
         sq.volume_down(5)
+
 
     return (returnDefaultRecord(sq))
 
