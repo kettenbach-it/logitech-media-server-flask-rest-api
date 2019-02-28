@@ -1,4 +1,4 @@
-import re
+import re, os
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 
@@ -9,8 +9,10 @@ from pylms.player import Player
 DEFAULT_PLAYER="00:04:20:23:a4:61"
 
 app = Flask(__name__)
-api = Api(app)
+app.config['LMS_HOST'] = os.environ['LMS_HOST']
+app.config['LMS_PORT'] = os.environ['LMS_PORT']
 
+api = Api(app)
 
 def returnDefaultRecord(sq):
     print(request.endpoint + " for " + sq.get_name())
@@ -29,7 +31,8 @@ def returnDefaultRecord(sq):
 
 
 def ProcessCommand():
-    sc = Server(hostname="sbs.rz.kettenbach-it.de", port=9090)
+    print("Connecting to " + app.config.get('LMS_HOST') + ":" + app.config.get('LMS_PORT'))
+    sc = Server(hostname=(app.config.get('LMS_HOST')), port=app.config.get('LMS_PORT'))
     sc.connect()
     parser = reqparse.RequestParser()
     parser.add_argument('player', type=str, help='Mac address of player')
