@@ -3,7 +3,7 @@ services:
   lms-api:
     build: .
     #image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.3
-    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:1.0.3
+    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:1.0.4
     container_name: lms-api
     networks:
       default:
