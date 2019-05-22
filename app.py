@@ -90,10 +90,10 @@ def ProcessCommand():
         sq.prev()
 
     if request.endpoint == "volup":
-        sq.volume_up(5)
+        sq.volume_up(3)
 
     if request.endpoint == "voldown":
-        sq.volume_down(5)
+        sq.volume_down(3)
 
 
     return (returnDefaultRecord(sq))
