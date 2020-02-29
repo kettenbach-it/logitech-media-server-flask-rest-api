@@ -1,9 +1,15 @@
 version: "3.7"
 services:
   lms-api:
+    healthcheck:
+      test: "/usr/bin/curl --fail http://localhost/healthcheck"
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     build: .
     #image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.3
-    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:1.0.4
+    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:2.0.0
     container_name: lms-api
     networks:
       default:
@@ -11,8 +17,10 @@ services:
         ipv4_address: 192.168.14.162
     restart: always
     environment:
-      LMS_HOST: lms.wi.kettenbach-it.de
-      LMS_PORT: 9090
+      LMS_HOST: "lms.wi.kettenbach-it.de"
+      LMS_PORT: 9000
+      VOLUMESTEP: 3
+      DEFAULT_PLAYER: "Arbeitszimmer"
 
 
 networks:

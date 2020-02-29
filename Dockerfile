@@ -5,7 +5,7 @@ LABEL maintainer="Volker Kettenbach <volker@vicosmo.de>"
 
 WORKDIR /srv
 
-COPY requirements.txt boot.sh ./
+COPY requirements.txt boot.sh gunicorn_config.py ./
 
 RUN apk update \
     && apk upgrade \
@@ -14,11 +14,9 @@ RUN apk update \
     && chmod +x boot.sh \
     && pip3 install --upgrade pip \
     && pip3 install -r requirements.txt \
-    && pip3 install gunicorn
+    && pip3 install curl gunicorn
 
-#COPY patch/player.py /usr/local/lib/python3.7/site-packages/pylms/player.py
-COPY patch/player.py /usr/lib/python3.6/site-packages/pylms/player.py
-COPY app.py ./
+COPY app.py  ./
 
 ENV FLASK_APP app.py
 
