@@ -1,4 +1,4 @@
-import re, os
+import re, os, pprint
 from flask import Flask, request, abort, jsonify
 from flask_smorest import Api
 from squeezebox_controller import SqueezeBoxController, commands
@@ -65,6 +65,9 @@ def index():
         'power': defaultplayer_info['power'],
         'title': defaultplayer_info['remoteMeta']['title']
     }
+    for name, mac in controller.player_macs.items():
+        if app.config.get("DEFAULT_PLAYER") == name:
+            result['defaultplayer']['mac'] = mac
     result['player'] = {}
     for p in sorted(controller.player_macs):
         if p is not "ALL":
@@ -72,6 +75,9 @@ def index():
             playerinfo: dict = controller._get_player_info(p)
             for pi in sorted(playerinfo.keys()):
                 result['player'][p][pi] = playerinfo[pi]
+                for name, mac in controller.player_macs.items():
+                    if p == name:
+                        result['player'][p]['mac'] = mac
 
     return result
 
@@ -82,6 +88,24 @@ def getplayer(player=app.config.get("DEFAULT_PLAYER")):
         abort(404, "Player must be in " + str(controller.player_macs.keys()))
     else:
         return controller._get_player_info(player)
+
+
+@app.route("/mac/<player>", methods=['GET'])
+def getplayer_bymac(player):
+    if player not in controller.player_macs.values():
+        abort(404, "Player must be in " + str(controller.player_macs.values()))
+    else:
+        return controller._get_player_info(player)
+
+
+@app.route("/<player>/<command>", methods=['GET'])
+def playercommand(player: str, command: str):
+    return process(command, player)
+
+
+@app.route("/mac/<player>/<command>", methods=['GET'])
+def playercommand_bymac(player: str, command: str):
+    return process_bymac(command, player)
 
 
 @app.route("/play", methods=['GET'])
@@ -124,11 +148,6 @@ def prev(player=app.config.get("DEFAULT_PLAYER")):
     return process("prev", player)
 
 
-@app.route("/<player>/<command>", methods=['GET'])
-def playercommand(player: str, command: str):
-    return process(command, player)
-
-
 def process(command, player):
     if player not in controller.player_macs:
         abort(404, "Player must be in " + str(controller.player_macs.keys()))
@@ -136,6 +155,23 @@ def process(command, player):
         if command not in getroutes():
             abort(406, "command must be in " + str(getroutes()))
         else:
+            controller.simple_command({
+                "player": player,
+                "command": mapcommand(command)
+            })
+        return getplayer(player)
+
+
+def process_bymac(command, player):
+    if player not in controller.player_macs.values():
+        abort(404, "Player must be in " + str(controller.player_macs.values()))
+    else:
+        if command not in getroutes():
+            abort(406, "command must be in " + str(getroutes()))
+        else:
+            for name, mac in controller.player_macs.items():
+                if player == mac:
+                    player = name
             controller.simple_command({
                 "player": player,
                 "command": mapcommand(command)
