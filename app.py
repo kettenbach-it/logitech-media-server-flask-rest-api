@@ -1,8 +1,13 @@
-import re, os, pprint
-from flask import Flask, request, abort, jsonify
+# pylint: disable=line-too-long, inconsistent-return-statements
+"""
+REST API for Logitech Media Server built with Python Flask
+"""
+import os
+
+from flask import Flask, abort, jsonify
 from flask_smorest import Api
-from squeezebox_controller import SqueezeBoxController, commands
 from healthcheck import HealthCheck, EnvironmentDump
+from squeezebox_controller import SqueezeBoxController, commands
 
 app = Flask("LMS REST API")
 app.config.update(
@@ -55,8 +60,12 @@ def custom406(error):
 
 @app.route("/", methods=['GET'])
 def index():
+    """
+    Index
+    :return:
+    """
     result = {}
-    defaultplayer_info = controller._get_player_info(app.config.get("DEFAULT_PLAYER"))
+    defaultplayer_info = controller._get_player_info(app.config.get("DEFAULT_PLAYER"))  # pylint:disable=protected-access
     result['defaultplayer'] = {
         'name': app.config.get("DEFAULT_PLAYER"),
         'volume': defaultplayer_info['mixer volume'],
@@ -69,86 +78,151 @@ def index():
         if app.config.get("DEFAULT_PLAYER") == name:
             result['defaultplayer']['mac'] = mac
     result['player'] = {}
-    for p in sorted(controller.player_macs):
-        if p is not "ALL":
-            result['player'][p] = {}
-            playerinfo: dict = controller._get_player_info(p)
-            for pi in sorted(playerinfo.keys()):
-                result['player'][p][pi] = playerinfo[pi]
+    for pmac in sorted(controller.player_macs):
+        if pmac != "ALL":
+            result['player'][pmac] = {}
+            playerinfo: dict = controller._get_player_info(pmac)  # pylint: disable=protected-access
+            for pinfo in sorted(playerinfo.keys()):
+                result['player'][pmac][pinfo] = playerinfo[pinfo]
                 for name, mac in controller.player_macs.items():
-                    if p == name:
-                        result['player'][p]['mac'] = mac
+                    if pmac == name:
+                        result['player'][pmac]['mac'] = mac
 
     return result
 
 
 @app.route("/<player>", methods=['GET'])
 def getplayer(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Players
+    :param player:
+    :return:
+    """
     if player not in controller.player_macs:
         abort(404, "Player must be in " + str(controller.player_macs.keys()))
     else:
-        return controller._get_player_info(player)
+        return controller._get_player_info(player)  # pylint:disable=protected-access
 
 
 @app.route("/mac/<player>", methods=['GET'])
 def getplayer_bymac(player):
+    """
+    Single player
+    :param player:
+    :return:
+    """
     if player not in controller.player_macs.values():
         abort(404, "Player must be in " + str(controller.player_macs.values()))
     else:
-        return controller._get_player_info(player)
+        return controller._get_player_info(player)  # pylint:disable=protected-access
 
 
 @app.route("/<player>/<command>", methods=['GET'])
 def playercommand(player: str, command: str):
+    """
+    Run command on default player
+    :param player:
+    :param command:
+    :return:
+    """
     return process(command, player)
 
 
 @app.route("/mac/<player>/<command>", methods=['GET'])
 def playercommand_bymac(player: str, command: str):
+    """
+    Run command on layer given my mac
+    """
     return process_bymac(command, player)
 
 
 @app.route("/play", methods=['GET'])
 def play(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Press "play" on default player
+    :param player:
+    :return:
+    """
     return process("play", player)
 
 
 @app.route("/pause", methods=['GET'])
 def pause(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Press "pause" in default player
+    :param player:
+    :return:
+    """
     return process("pause", player)
 
 
 @app.route("/poweron", methods=['GET'])
 def poweron(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Poweron default player
+    :param player:
+    :return:
+    """
     return process("poweron", player)
 
 
 @app.route("/poweroff", methods=['GET'])
 def poweroff(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Poweroff default player
+    :param player:
+    :return:
+    """
     return process("poweroff", player)
 
 
 @app.route("/volup", methods=['GET'])
 def volup(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Vollume up on default player
+    :param player:
+    :return:
+    """
     return process("volup", player)
 
 
 @app.route("/voldown", methods=['GET'])
 def voldown(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Volume down on defaut player
+    :param player:
+    :return:
+    """
     return process("voldown", player)
 
 
 @app.route("/next", methods=['GET'])
 def nexttitle(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Nexttitle on default player
+    :param player:
+    :return:
+    """
     return process("next", player)
 
 
 @app.route("/prev", methods=['GET'])
 def prev(player=app.config.get("DEFAULT_PLAYER")):
+    """
+    Previous title on default player
+    :param player:
+    :return:
+    """
     return process("prev", player)
 
 
 def process(command, player):
+    """
+    Process command
+    :param command:
+    :param player:
+    :return:
+    """
     if player not in controller.player_macs:
         abort(404, "Player must be in " + str(controller.player_macs.keys()))
     else:
@@ -163,6 +237,12 @@ def process(command, player):
 
 
 def process_bymac(command, player):
+    """
+    Process command by mac
+    :param command:
+    :param player:
+    :return:
+    """
     if player not in controller.player_macs.values():
         abort(404, "Player must be in " + str(controller.player_macs.values()))
     else:
@@ -179,26 +259,35 @@ def process_bymac(command, player):
         return getplayer(player)
 
 
-def mapcommand(command):
+def mapcommand(command):  # pylint: disable=too-many-return-statements
+    """
+    Command mapping
+    :param command:
+    :return:
+    """
     if command == "play":
         return "PLAY"
-    elif command == "pause":
+    if command == "pause":
         return "PAUSE"
-    elif command == "poweron":
+    if command == "poweron":
         return "POWER ON"
-    elif command == "poweroff":
+    if command == "poweroff":
         return "POWER OFF"
-    elif command == "volup":
+    if command == "volup":
         return "VOLUME UP"
-    elif command == "voldown":
+    if command == "voldown":
         return "VOLUME DOWN"
-    elif command == "next":
+    if command == "next":
         return "SKIP"
-    elif command == "prev":
+    if command == "prev":
         return "PREVIOUS"
 
 
 def getroutes():
+    """
+    Get routes in app
+    :return:
+    """
     result = []
     for rule in app.url_map.iter_rules():
         if str(rule) not in ["/openapi.json", "/static/<path:filename>", "/", "/<player>", "/<player>/<command>",
@@ -208,12 +297,16 @@ def getroutes():
 
 
 def checklms():
+    """
+    Check if LMS is working
+    :return:
+    """
     is_lms_working = False
     output = 'LMS is broken'
     try:
         is_lms_working = True
         output = "LMS is working"
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         output = output + ". " + str(exc)
     return is_lms_working, output
 
