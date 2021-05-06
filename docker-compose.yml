@@ -9,8 +9,9 @@ services:
       start_period: 5s
     build: .
     #image: eu.gcr.io/kettenbach-it/lms-flask-api:1.0.3
-    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:2.0.0
+    image: eu.gcr.io/kettenbach-it/lms-flask-api-arm:2.0.2
     container_name: lms-api
+    # This uses docker macvlan -  it will work with "normal" dockeer bridge as well
     networks:
       default:
         #ipv4_address: 192.168.204.108
