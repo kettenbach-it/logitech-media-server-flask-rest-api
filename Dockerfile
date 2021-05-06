@@ -1,7 +1,7 @@
 #FROM python:3.7-alpine
 FROM balenalib/raspberrypi3-alpine-python
 
-LABEL maintainer="Volker Kettenbach <volker@vicosmo.de>"
+LABEL maintainer="Volker Kettenbach <volker@ktnbch.de>"
 
 WORKDIR /srv
 
